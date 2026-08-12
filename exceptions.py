@@ -17,3 +17,6 @@ class InvalidISBNError(BookError):
 
 class MemberNotFoundError(LibraryError):
     pass
+
+class BookNotBorrowedError(BookError):
+    pass
