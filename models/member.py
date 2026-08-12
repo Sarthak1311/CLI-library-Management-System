@@ -10,15 +10,15 @@ class Member(Person):
         print(f"{self.name} is a member")
         return super().display_role()
 
-    def borrow(self,book_name):
-        self.borrowed_books.add(book_name)
-        print(f"{self.name} borrowed the {book_name}")
+    def borrow(self,book_id):
+        self.borrowed_books.add(book_id)
+        print(f"{self.name} borrowed the {book_id}")
 
-    def retrun_book(self, book):
-        if book in self.borrowed_books:
-            self.borrowed_books.remove(book)
-            print(f"{self.name} return the {book}")
+    def retrun_book(self, book_id):
+        if book_id in self.borrowed_books:
+            self.borrowed_books.remove(book_id)
+            print(f"{self.name} return the {book_id}")
         else: 
-            print(f"{self.name} doesn't have {book} in his/her borrowed list")
+            print(f"{self.name} doesn't have {book_id} in his/her borrowed list")
 
 
