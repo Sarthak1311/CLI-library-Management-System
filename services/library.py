@@ -1,5 +1,8 @@
 from models.book import Book
 from models.member import Member
+from models.transaction import Transaction
+from datetime import datetime
+
 from exceptions import (
     BookNotBorrowedError,
     BookNotFoundError,
@@ -12,6 +15,7 @@ class Library:
         self.books = dict()
         self.members = dict()
         self.transaction  = dict()
+        self.next_transaction_id = 1
 
     # book Management 
     # add book , delete book ,find book , search book 
@@ -84,6 +88,17 @@ class Library:
         book.borrow()
         member.borrow(book_id)
 
+        # create transaction
+        transaction = Transaction(
+            transaction_id= self.next_transaction_id,
+            member_id= member_id,
+            book_id= book_id,
+            borrowed_at= datetime.now()
+        )
+        self.transaction[self.next_transaction_id] = transaction
+        self.next_transaction_id +=1 
+        return transaction
+
     def return_book(self,book_id,member_id):
         member = self.find_member(member_id)
         book = self.find_book(book_id)
@@ -94,4 +109,23 @@ class Library:
             )
         book.return_book()
         member.return_book(book_id)
+
+        transaction = None
+        for current_transaction in self.transaction:
+            if(
+                current_transaction.member_id == member_id
+                and current_transaction.book_id == book_id
+                and current_transaction.is_active
+            ):
+                transaction = current_transaction
+
+            if transaction is None:
+                raise ValueError(
+                    "No active transaction found for this borrowing"
+                )
+
+            # record return time 
+            transaction.return_book()
+
+            return transaction
         

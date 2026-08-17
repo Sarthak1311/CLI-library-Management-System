@@ -86,7 +86,7 @@ class Book:
     def __repr__(self):
         return (
             f"Book("
-            f"id={self.book_id!r}, "
+            f"id={self.id!r}, "
             f"title={self.title!r}, "
             f"author={self.author!r}, "
             f"isbn={self.isbn!r}, "
