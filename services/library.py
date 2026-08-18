@@ -2,7 +2,7 @@ from models.book import Book
 from models.member import Member
 from models.transaction import Transaction
 from datetime import datetime
-
+from late_fee import LateFeeServices
 from exceptions import (
     BookNotBorrowedError,
     BookNotFoundError,
@@ -11,11 +11,15 @@ from exceptions import (
 
 class Library:
 
-    def __init__(self):
+    def __init__(self,late_fee_service = None):
         self.books = dict()
         self.members = dict()
         self.transaction  = dict()
         self.next_transaction_id = 1
+
+        if late_fee_service is None:
+            late_fee_service = LateFeeServices()
+        self.late_fee_service = late_fee_service
 
     # book Management 
     # add book , delete book ,find book , search book 
@@ -129,3 +133,63 @@ class Library:
 
             return transaction
         
+    def get_member_late_fee(
+            self,
+            member_id,
+            as_of = None
+    ):
+        member = self.find_member(member_id)
+
+        results =[]
+
+        for transaction in self.transaction.values():
+            if transaction.member_id != member_id:
+                continue
+
+            result = self.late_fee_service.calculate_fee(
+                transaction,
+                as_of=as_of,
+            )
+
+            if result.is_late:
+                results.append(result)
+
+        total_fee = sum(
+            result.late_fee
+            for result in results
+        )
+
+        return {
+            "member_id" : member_id,
+            "Results" : results,
+            "total_fee" : total_fee 
+        }
+
+    def get_defaulters(self, as_of=None):
+
+        defaulters = {}
+
+        for transaction in self.transaction.values():
+
+            result = self.late_fee_service.calculate_fee(
+                transaction,
+                as_of=as_of,
+            )
+
+            if not result.is_late:
+                continue
+
+            member_id = result.member_id
+
+            if member_id not in defaulters:
+                defaulters[member_id] = {
+                    "member_id": member_id,
+                    "details": [],
+                    "total_fee": 0,
+                }
+
+            defaulters[member_id]["details"].append(result)
+
+            defaulters[member_id]["total_fee"] += result.fee
+
+        return list(defaulters.values())
